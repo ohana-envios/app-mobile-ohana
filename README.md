@@ -15,7 +15,7 @@ npm start
 
 En el menú de Expo, presione `i` para el simulador iOS (macOS con Xcode) o `a` para el emulador Android (Android Studio). También puede usar una compilación de desarrollo en un dispositivo físico. `npm run ios` y `npm run android` abren directamente el destino correspondiente. Las carpetas nativas se generan solo cuando haga falta con `npx expo prebuild`; no están versionadas en esta base.
 
-Para comprobar que el bundle se genera para ambas plataformas, ejecute `npm run export:ios` y `npm run export:android`. CI ejecuta TypeScript y ambas exportaciones.
+Para comprobar que el bundle se genera para ambas plataformas, ejecute `npm run build`; este comando corre TypeScript y exporta iOS y Android. También puede ejecutar `npm run export:ios` y `npm run export:android` por separado. CI ejecuta los mismos pasos.
 
 ## Estructura
 
