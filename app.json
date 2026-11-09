@@ -1,0 +1,17 @@
+{
+  "expo": {
+    "name": "Ohana Envíos",
+    "slug": "app-mobile-ohana",
+    "scheme": "ohanaenvios",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "edgeToEdgeEnabled": true
+    },
+    "plugins": []
+  }
+}
