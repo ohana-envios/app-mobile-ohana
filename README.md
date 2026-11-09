@@ -27,3 +27,7 @@ Para comprobar que el bundle se genera para ambas plataformas, ejecute `npm run 
 ## Próximas integraciones
 
 `EXPO_PUBLIC_API_BASE_URL` se reserva para la API; al probar en un teléfono físico no use `localhost`, sino la IP de su máquina en la red local o una URL de desarrollo accesible. Las variables `EXPO_PUBLIC_` son públicas: no guardar secretos allí. El inicio de sesión móvil, la persistencia segura de sesión, Auth0/MFA y los casos de uso reales se incorporarán en tareas posteriores. Antes de compilar para tiendas, confirmar identificadores de paquete, iconos, política de permisos y cuentas de Apple/Google con el equipo.
+
+## Ramas y ambientes
+
+Usar `feature/* → dev → staging → main` mediante PR y revisión. `dev` sirve para trabajo integrado, `staging` para pruebas con API/Auth0 de prueba, y `main` para la versión aprobada. Una rama no equivale a una app distribuida: las compilaciones de desarrollo, prueba y producción necesitan perfiles, identificadores y credenciales nativas propios cuando se configure EAS. Hasta entonces, los bundles de CI solo verifican que el JavaScript se genere para ambas plataformas.

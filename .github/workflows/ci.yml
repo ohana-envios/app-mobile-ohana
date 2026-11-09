@@ -2,9 +2,9 @@ name: Mobile CI
 
 on:
   push:
-    branches: [main, feat/scrum-16-mobile-base]
+    branches: [dev, staging, main, feat/scrum-16-mobile-base]
   pull_request:
-    branches: [main]
+    branches: [dev, staging, main]
 
 jobs:
   verify:
