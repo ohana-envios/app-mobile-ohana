@@ -10,7 +10,7 @@ export default function App() {
   const [tab, setTab] = useState<Tab>('Inicio');
 
   return <SafeAreaView style={styles.safe}>
-    <StatusBar barStyle="light-content" backgroundColor={colors.blueDark} />
+    <StatusBar barStyle="light-content" />
     <View style={styles.header}>
       <View style={styles.brandMark}><Text style={styles.brandLetter}>O</Text></View>
       <View><Text style={styles.brand}>Ohana</Text><Text style={styles.brandSub}>ENVÍOS</Text></View>
