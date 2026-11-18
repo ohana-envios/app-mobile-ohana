@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Text, View } from 'react-native';
 import type { CustomerAddress, CustomerAddressDraft, CustomerDetail, CustomerEditDraft } from './customers/types';
-import { isCustomerConflict, validateCustomerEdit } from './customers/customer-edit';
+import { isCustomerConflict, isDuplicateCustomerEmail, validateCustomerEdit } from './customers/customer-edit';
 import { addressFieldLimits, hasDuplicateAddress, validateCustomerAddress } from './customers/customer-address';
 import { Button, Field } from './Controls';
 import { styles as s } from './styles';
@@ -35,7 +35,8 @@ export function CustomerForm({ customer, address, mode, onSave, onCancel, onRelo
     setErrors({}); setFailure(''); setBusy(true);
     try { await onSave(draft as Draft); }
     catch (error) {
-      if (isCustomerConflict(error)) { setConflict(true); setFailure('La ficha cambió mientras la editabas. Tus cambios siguen en el formulario; copialos si los necesitás y recargá la ficha.'); }
+      if (mode === 'customer' && isDuplicateCustomerEmail(error)) { setErrors({ email: 'No se puede usar ese correo. Revisalo e intentá nuevamente.' }); }
+      else if (isCustomerConflict(error)) { setConflict(true); setFailure('La ficha cambió mientras la editabas. Tus cambios siguen en el formulario; copialos si los necesitás y recargá la ficha.'); }
       else setFailure('No se pudieron guardar los cambios. Podés reintentar.');
     }
     finally { setBusy(false); }

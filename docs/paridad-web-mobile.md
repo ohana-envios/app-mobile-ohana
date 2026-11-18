@@ -1,5 +1,45 @@
 # Paridad web y móvil — SCRUM-20 / SCRUM-21
 
+## Actualización: correo duplicado
+
+Las pantallas web y móvil tratan igual el rechazo de un correo duplicado: conservan el formulario y permiten corregir el campo. La regla real se aplica en la API tanto a alta como a edición administrativa y autogestión; no altera registros históricos. Pruebas de contratos, paridad y PostgreSQL aislado aprobadas.
+
+
+## Actualización: autogestión
+
+Por decisión del usuario, web y móvil ofrecen «Mis datos y direcciones» a clientes aprobados con cuenta y ficha habilitadas. Usan las mismas reglas y rutas de autogestión, con auditoría, protección de pertenencia y al menos una dirección activa. Las pruebas de API usan identidad simulada y PostgreSQL aislado; faltan la prueba visual y con ZITADEL en dispositivos reales.
+
+
+## Actualización: estado y auditoría de clientes
+
+Web y móvil conectan desactivación y reactivación de fichas a la misma API, con tratamiento de conflictos para clientes pendientes. La API audita transaccionalmente estado, edición de datos y gestión de direcciones. La verificación de fuentes y paridad pasó; faltan la revisión visual en dispositivo y la prueba con identidad real.
+
+
+## Invitaciones de identidad
+
+Web y móvil permiten a ADMIN generar el código de invitación y a la persona autenticada canjearlo con el correo verificado correspondiente. El código se muestra solo al generarlo, vence a las 24 horas y se comparte manualmente; la vinculación no habilita la cuenta automáticamente. Operadores y repartidores habilitados acceden a una bienvenida limitada sin funciones administrativas. Se probaron contratos y tipos; siguen pendientes interacción en dispositivos y validación de ZITADEL real.
+
+
+## Alta local de usuarios internos
+
+Web y móvil permiten crear cuentas internas deshabilitadas con el mismo contrato y aviso de identidad pendiente. Las reglas, pruebas de fuentes y verificación de paridad se mantienen alineadas; falta el flujo de vinculación segura y la prueba visual y de identidad en dispositivos reales.
+
+
+## Alta administrativa y cuenta de cliente aprobada
+
+Web y móvil permiten a ADMIN registrar una ficha de cliente sin cuenta y administrar el estado de cuentas cliente con aprobación inicial registrada. En ambas plataformas una cuenta CUSTOMER habilitada accede a una bienvenida limitada sin funciones administrativas; no están implementadas las funciones de envíos. Las pruebas verifican las fuentes, la política de sesión móvil y los contratos compartidos. Quedan pendientes la prueba visual en dispositivo y la validación con ZITADEL real.
+
+
+## Autorregistro y habilitación inicial
+
+Web y móvil ofrecen solicitud con nombre, tipo y teléfono opcional, con correo verificado obtenido por la API, revisión y confirmación. ADMIN puede consultar y habilitar solicitudes pendientes en Usuarios. Las fuentes compartidas, pruebas de contrato y el control de paridad se actualizaron. El acceso móvil operativo existente sigue limitado a administradores: falta el portal de cliente habilitado, además de validar visualmente y con ZITADEL en dispositivos reales.
+
+
+## Actualización: acceso interno con auditoría
+
+Web y móvil conectan el cambio de rol y estado de cuentas internas con la misma API y muestran la auditoría devuelta; ante conflicto conservan el borrador hasta que se recargue. El acceso de clientes permanece bloqueado hasta implementar su habilitación inicial. Las pruebas de fuentes y la paridad compartida pasaron; siguen pendientes la prueba con identidad real y la interacción en dispositivo.
+
+
 Actualización: la API habilita la lectura administrativa de clientes y usuarios para `ADMIN` según la decisión del usuario. Las pantallas de lectura de web y móvil están conectadas en código a la API y usan la sesión operativa. El ingreso móvil emplea código con PKCE y requiere configuración del cliente nativo y de la API; todavía no se ha verificado con ZITADEL ni dispositivos reales. Las vistas previas de ambas plataformas siguen usando datos ficticios y conservan las mismas reglas.
 
 Edición administrativa: web y móvil envían los cuatro campos de nombre y contacto y sus valores originales a `PATCH /api/customers/:customerId`. La API verifica el rol, valida los datos y rechaza con 409 un cambio concurrente en esos campos. Ambas interfaces conservan el borrador y ofrecen descartar y recargar. La persistencia y la concurrencia se probaron en PostgreSQL aislado con autenticación simulada; falta la prueba con ZITADEL y dispositivos reales. Las vistas previas siguen guardando solo en memoria. La auditoría continúa pendiente.

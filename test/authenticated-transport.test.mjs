@@ -32,3 +32,13 @@ test('mobile transport sends authenticated customer edits and rejects server err
     await once(server, 'close');
   }
 });
+
+
+test('duplicate email errors carry only the known code', async () => {
+  const server = createServer((request, response) => response.writeHead(409, { 'Content-Type': 'application/json' }).end(JSON.stringify({ code: 'CUSTOMER_EMAIL_DUPLICATE', internal: 'must not leak' })));
+  server.listen(0, '127.0.0.1'); await once(server, 'listening');
+  try {
+    const request = createAuthenticatedTransport(`http://127.0.0.1:${server.address().port}`, { accessToken: 'test-token', expiresAt: Date.now() + 60000 });
+    await assert.rejects(request('/api/test', { signal: new AbortController().signal }), error => error.status === 409 && error.code === 'CUSTOMER_EMAIL_DUPLICATE' && !('internal' in error));
+  } finally { server.close(); await once(server, 'close'); }
+});

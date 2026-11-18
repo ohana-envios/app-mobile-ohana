@@ -10,3 +10,8 @@ Fecha: 08/11/2026. Rama local: `feat/scrum-16-mobile-base`.
 - La instalación informó cinco vulnerabilidades moderadas. Falta revisar el detalle con `npm audit`; no aplicar `npm audit fix --force` sin analizar el cambio de versiones.
 
 La exportación valida los bundles JavaScript. Aún faltan arranque en simulador/dispositivo iOS y Android, build nativo y revisión de otro integrante antes de dar SCRUM-16 por terminada. La cuenta Auth0, la API operativa y los identificadores de tienda se configurarán en tareas posteriores.
+
+
+## Cierre de sesi?n m?vil con el proveedor
+
+Registrar `ohanaenvios://auth/logout` como URI de redirecci?n posterior al cierre en la aplicaci?n m?vil de ZITADEL del ambiente correspondiente. La app cierra la sesi?n local, intenta revocar el token y abre el cierre de sesi?n del proveedor. Si no puede confirmar ambas operaciones, muestra una advertencia. Verificar en Android e iOS con el proveedor real: ingreso, cierre, retorno a la app y que el siguiente ingreso vuelva a pedir credenciales. Las diferencias entre navegadores y la configuraci?n del proveedor requieren esta prueba; la compilaci?n por s? sola no confirma el cierre de cookies.

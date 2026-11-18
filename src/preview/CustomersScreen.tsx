@@ -52,7 +52,7 @@ export function CustomersScreen({ source, preview = false }: { source: Customers
 }
 
 type Action = { kind: 'customer' } | { kind: 'address'; address: CustomerAddress };
-function CustomerRecord({ id, source, preview, onBack }: { id: string; source: CustomersSource; preview: boolean; onBack: () => void }) {
+export function CustomerRecord({ id, source, preview, onBack, backLabel = 'Volver a clientes' }: { id: string; source: CustomersSource; preview: boolean; onBack: () => void; backLabel?: string }) {
   const [customer, setCustomer] = useState<CustomerDetail | null>(null);
   const [error, setError] = useState('');
   const [retry, setRetry] = useState(0);
@@ -61,13 +61,18 @@ function CustomerRecord({ id, source, preview, onBack }: { id: string; source: C
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState('');
   const [statusConflict, setStatusConflict] = useState(false);
+  const [invitationEmail, setInvitationEmail] = useState('');
+  const [invitation, setInvitation] = useState<{ code: string; expiresAt: string } | null>(null);
+  const [invitationBusy, setInvitationBusy] = useState(false);
+  const [invitationError, setInvitationError] = useState('');
+
   useEffect(() => {
     const controller = new AbortController(); setError('');
     source.get(id, controller.signal).then((data) => { if (!controller.signal.aborted) setCustomer(data); })
       .catch(() => { if (!controller.signal.aborted) setError('No pudimos cargar la ficha.'); });
     return () => controller.abort();
   }, [source, id, retry]);
-  if (!customer) return <View style={s.card}><Button title="Volver a clientes" onPress={onBack} />
+  if (!customer) return <View style={s.card}><Button title={backLabel} onPress={onBack} />
     <Text style={s.text}>{error || 'Cargando ficha…'}</Text>{error && <Button title="Reintentar" onPress={() => setRetry((n) => n + 1)} />}</View>;
   const inactive = customer.preview?.inactiveAddressIds ?? [];
   const activeCount = customer.addresses.filter((item) => isAddressActive(item, inactive)).length;
@@ -97,8 +102,8 @@ function CustomerRecord({ id, source, preview, onBack }: { id: string; source: C
       }
       setCustomer(saved); setAction(null); setNotice(preview ? 'Estado actualizado en la vista previa.' : 'Estado actualizado.');
     } catch (failure) {
-      if (action.kind === 'address' && isCustomerConflict(failure)) {
-        setStatusConflict(true); setError('Debe quedar al menos una dirección activa. Recargá la ficha para ver los cambios recientes.');
+      if (isCustomerConflict(failure)) {
+        setStatusConflict(true); setError(action.kind === 'address' ? 'Debe quedar al menos una dirección activa. Recargá la ficha para ver los cambios recientes.' : 'No se puede cambiar el estado. Los registros pendientes se habilitan desde solicitudes pendientes. Recargá la ficha.');
       } else setError('No se pudo actualizar el estado. Podés reintentar.');
     }
     finally { setBusy(false); }
@@ -120,7 +125,7 @@ function CustomerRecord({ id, source, preview, onBack }: { id: string; source: C
     </View>;
   }
   return <>
-    <Button title="Volver a clientes" onPress={onBack} />
+    <Button title={backLabel} onPress={onBack} />
     {notice && <Text accessibilityLiveRegion="polite" style={s.muted}>{notice}</Text>}
     <View style={s.card}>
       <Text accessibilityRole="header" style={s.title}>{customer.displayName}</Text>
@@ -129,6 +134,18 @@ function CustomerRecord({ id, source, preview, onBack }: { id: string; source: C
       {source.update && <Button title="Editar datos" onPress={() => setEdit({ mode: 'customer' })} />}
       {(customer.enabled ? source.deactivateCustomer : source.reactivateCustomer) && <Button title={customer.enabled ? 'Desactivar cliente' : 'Reactivar cliente'} onPress={() => setAction({ kind: 'customer' })} />}
     </View>
+    {source.inviteCustomer && customer.enabled && <View style={s.card}>
+      <Text accessibilityRole="header" style={s.heading}>Invitar al cliente a su cuenta</Text>
+      <Text style={s.text}>El cliente debe verificar este correo y canjear el c?digo. Despu?s un administrador habilita su cuenta.</Text>
+      {invitation ? <><Text style={s.text} selectable>C?digo de un solo uso: {invitation.code}</Text><Text style={s.muted}>Vence {new Date(invitation.expiresAt).toLocaleString()}. Compartilo de forma segura; al salir no se volver? a mostrar.</Text><Button title="Cerrar" onPress={() => setInvitation(null)} /></> : <>
+        <Field label="Correo de acceso" kind="email" value={invitationEmail} maxLength={254} onChange={setInvitationEmail} />
+        {!!invitationError && <Text accessibilityRole="alert" style={s.error}>{invitationError}</Text>}
+        <Button title={invitationBusy ? 'Generando?' : 'Generar invitaci?n'} disabled={invitationBusy || !invitationEmail.trim()} onPress={() => {
+          if (invitationBusy || !source.inviteCustomer) return; setInvitationBusy(true); setInvitationError('');
+          source.inviteCustomer(id, invitationEmail.trim(), new AbortController().signal).then(setInvitation).catch(() => setInvitationError('No se pudo generar la invitaci?n. Verific? el correo y el estado de la cuenta.')).finally(() => setInvitationBusy(false));
+        }} />
+      </>}
+    </View>}
     <Text accessibilityRole="header" style={s.heading}>Direcciones habituales</Text>
     {(preview || customer.addresses.some((item) => typeof item.active === 'boolean')) && <Text style={s.muted}>{activeCount} activas · {customer.addresses.length - activeCount} desactivadas</Text>}
     {source.deactivateAddress && activeCount <= 1 && <Text style={s.muted}>{activeCount === 0 ? 'Este cliente no tiene direcciones activas. Agregá o reactivá una.' : 'Debe quedar al menos una dirección activa. Para desactivar la última, agregá o reactivá otra primero.'}</Text>}

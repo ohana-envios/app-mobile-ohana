@@ -12,14 +12,14 @@ export function Button({ title, onPress, disabled = false, selected = false }: {
 
 export function Field({ label, value, onChange, error, kind = 'text', maxLength }: {
   label: string; value: string; onChange: (value: string) => void; error?: string;
-  kind?: 'text' | 'email' | 'phone'; maxLength?: number;
+  kind?: 'text' | 'email' | 'phone' | 'code'; maxLength?: number;
 }) {
   return <View style={s.field}>
     <Text style={s.label}>{label}</Text>
     <TextInput accessibilityLabel={label} accessibilityHint={error} value={value} onChangeText={onChange}
       style={[s.input, error ? { borderColor: palette.danger } : undefined]} maxLength={maxLength}
       keyboardType={kind === 'email' ? 'email-address' : kind === 'phone' ? 'phone-pad' : 'default'}
-      autoCapitalize={kind === 'email' ? 'none' : 'sentences'} autoCorrect={kind === 'text'} />
+      autoCapitalize={kind === 'email' || kind === 'code' ? 'none' : 'sentences'} autoCorrect={kind === 'text'} />
     {error && <Text accessibilityRole="alert" style={s.error}>{error}</Text>}
   </View>;
 }
