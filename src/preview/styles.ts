@@ -1,0 +1,27 @@
+import { StyleSheet } from 'react-native';
+export const palette = { bg: '#F2F6F3', card: '#FFFFFF', ink: '#16221C', muted: '#5A6B61', brand: '#0D7052', line: '#E4EBE6', soft: '#E3F2EA', danger: '#94332D' };
+export const styles = StyleSheet.create({
+  safe: { flex: 1, backgroundColor: palette.bg },
+  content: { padding: 20, gap: 16, paddingBottom: 32, width: '100%', maxWidth: 900, alignSelf: 'center' },
+  header: { flexDirection: 'row', gap: 12, alignItems: 'center', flexWrap: 'wrap' },
+  logo: { backgroundColor: palette.brand, color: 'white', width: 44, height: 44, textAlign: 'center', textAlignVertical: 'center', borderRadius: 14, fontSize: 24, fontWeight: '800', paddingTop: 6 },
+  title: { color: palette.ink, fontSize: 27, fontWeight: '800' },
+  subtitle: { color: palette.muted, fontSize: 13 },
+  heading: { color: palette.ink, fontSize: 21, fontWeight: '700' },
+  text: { color: palette.ink, fontSize: 16, lineHeight: 24 },
+  muted: { color: palette.muted, fontSize: 14, lineHeight: 21 },
+  card: { backgroundColor: palette.card, borderColor: palette.line, borderWidth: 1, borderRadius: 22, padding: 20, gap: 12 },
+  banner: { backgroundColor: '#FDF2E2', borderRadius: 16, padding: 16, gap: 6 },
+  row: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 8 },
+  button: { minHeight: 52, paddingHorizontal: 16, paddingVertical: 12, borderRadius: 12, borderColor: palette.brand, borderWidth: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: palette.card },
+  buttonText: { color: palette.brand, fontSize: 16, fontWeight: '600' },
+  selected: { backgroundColor: palette.soft },
+  disabled: { opacity: 0.45 },
+  field: { gap: 6 },
+  label: { color: palette.ink, fontSize: 14, fontWeight: '600' },
+  input: { minHeight: 52, padding: 12, backgroundColor: palette.card, borderColor: '#7C9184', borderWidth: 1, borderRadius: 12, color: palette.ink, fontSize: 16 },
+  error: { color: palette.danger, fontSize: 14, lineHeight: 21 },
+  nav: { flexDirection: 'row', gap: 8, padding: 10, marginHorizontal: 16, marginBottom: 8, borderRadius: 22, backgroundColor: '#16221C' },
+  navTab: { flex: 1, minHeight: 52, padding: 8, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
+  navText: { color: '#DCE7DF', fontSize: 14, fontWeight: '700', textAlign: 'center' },
+});

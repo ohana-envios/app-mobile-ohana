@@ -12,6 +12,8 @@
     "android": {
       "edgeToEdgeEnabled": true
     },
-    "plugins": []
+    "plugins": [
+      "expo-web-browser"
+    ]
   }
 }

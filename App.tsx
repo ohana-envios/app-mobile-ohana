@@ -2,12 +2,21 @@ import { useState } from 'react';
 import { Pressable, SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, View } from 'react-native';
 import { EmptyState } from './src/components/EmptyState';
 import { colors } from './src/theme';
+import { AuthenticatedApp } from './src/AuthenticatedApp';
 
 type Tab = 'Inicio' | 'Envíos' | 'Perfil';
 const tabs: Tab[] = ['Inicio', 'Envíos', 'Perfil'];
 
 export default function App() {
   const [tab, setTab] = useState<Tab>('Inicio');
+  const [preview, setPreview] = useState(false);
+  const [administration, setAdministration] = useState(false);
+  if (administration) return <AuthenticatedApp onExit={() => setAdministration(false)} />;
+  if (__DEV__ && preview) {
+    // Metro removes this development-only branch and its fixtures in release builds.
+    const { PreviewApp } = require('./src/preview/PreviewApp') as typeof import('./src/preview/PreviewApp');
+    return <PreviewApp onExit={() => setPreview(false)} />;
+  }
 
   return <SafeAreaView style={styles.safe}>
     <StatusBar barStyle="light-content" />
@@ -18,6 +27,12 @@ export default function App() {
       <Text style={styles.headerTag}>BASE MÓVIL</Text>
     </View>
     <ScrollView contentContainerStyle={styles.content}>
+      <Pressable accessibilityRole="button" onPress={() => setAdministration(true)} style={styles.previewButton}>
+        <Text style={styles.previewButtonText}>Ingresar al panel administrativo</Text>
+      </Pressable>
+      {__DEV__ && <Pressable accessibilityRole="button" onPress={() => setPreview(true)} style={styles.previewButton}>
+        <Text style={styles.previewButtonText}>Probar Clientes y Usuarios · Datos ficticios</Text>
+      </Pressable>}
       {tab === 'Inicio' && <Home />}
       {tab === 'Envíos' && <Section title="Mis envíos" description="Aquí aparecerán los envíos reales cuando la API incorpore el listado y seguimiento." />}
       {tab === 'Perfil' && <Section title="Mi perfil" description="Este espacio recibirá los datos de la sesión cuando se integre Auth0 en la app móvil." />}
@@ -49,6 +64,8 @@ function Section({ title, description }: { title: string; description: string })
 }
 
 const styles = StyleSheet.create({
+  previewButton: { minHeight: 52, padding: 16, backgroundColor: '#E3F2EA', borderRadius: 12, marginBottom: 20 },
+  previewButtonText: { color: '#0A5B42', fontSize: 16, fontWeight: '700' },
   safe: { flex: 1, backgroundColor: colors.background },
   header: { backgroundColor: colors.blue, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 15 },
   brandMark: { width: 36, height: 36, borderRadius: 10, backgroundColor: colors.orange, alignItems: 'center', justifyContent: 'center', marginRight: 10 },
