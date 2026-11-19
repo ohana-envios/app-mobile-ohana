@@ -124,3 +124,8 @@ No se modificaron dependencias, lockfile, CI, esquema, migraciones ni proveedor 
 Resultado del primer emparejamiento 14/11/2026: 24 pruebas por repositorio (48 ejecuciones), verificación de paridad, build web, TypeScript móvil y exportaciones normales/de desarrollo iOS/Android aprobados. No se encontraron marcadores de fixtures ni la entrada de simulación en los artefactos normales. Las exportaciones de desarrollo sí contienen pantallas y datos ficticios. Revisión visual en dispositivo pendiente.
 
 Siguiente tramo: 27 pruebas por repositorio al agregar cambios de rol/acceso a usuarios existentes. Ver `web-ohana/docs/scrum-20-preview.md` para reglas, límites y distinción de CU18. La vista previa móvil crea su propia fuente de usuarios al entrar; cambiar de pestaña conserva las modificaciones, y salir/reingresar las reinicia. El bloqueo de pérdida del propio acceso administrativo es una protección provisional de la simulación, no una nueva regla atribuida al documento. Persistencia, auditoría y alta/aprobación siguen pendientes.
+
+
+## Invitaciones por correo
+
+Web y m?vil ofrecen el env?o desde Usuarios para administradores habilitados cuyo identificador tambi?n est? incluido en la lista autorizada del servicio. La API vuelve a comprobar ambas condiciones al enviar. La verificaci?n con ZITADEL real, la entrega de correo y la interacci?n en dispositivos siguen pendientes.

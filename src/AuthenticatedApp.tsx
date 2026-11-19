@@ -4,6 +4,8 @@ import * as AuthSession from 'expo-auth-session';
 import * as WebBrowser from 'expo-web-browser';
 import { SelfCustomerScreen } from './preview/SelfCustomerScreen';
 import { InvitationClaim } from './preview/InvitationViews';
+import { EmailInvitations } from './preview/EmailInvitations';
+import { createEmailInvitationsSource } from './preview/email-invitations';
 import { AdminCustomerRegistration } from './preview/AdminCustomerRegistration';
 import { createRegistrationsSource } from './preview/registrations';
 import { RegistrationScreen, PendingRegistrations } from './preview/RegistrationScreens';
@@ -156,12 +158,12 @@ function AdminDirectory({ config, session, onExit }: { config: Config; session: 
   const [customersRevision, setCustomersRevision] = useState(0);
   const sources = useMemo(() => {
     const request = createAuthenticatedTransport(config.api, session);
-    return { customers: createApiCustomersSource(request), users: createApiUsersSource(request), registrations: createRegistrationsSource(request) };
+    return { customers: createApiCustomersSource(request), users: createApiUsersSource(request), registrations: createRegistrationsSource(request), emailInvitations: createEmailInvitationsSource(request) };
   }, [config.api, session]);
   return <SafeAreaView style={styles.safe}>
     <ScrollView key={tab} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
       <View style={styles.header}><Text style={styles.heading}>Ohana</Text><Text style={styles.muted}>{session.name}</Text></View>
-      {tab === 'customers' ? <><AdminCustomerRegistration source={sources.registrations} onCreated={() => setCustomersRevision(value => value + 1)} /><CustomersScreen key={customersRevision} source={sources.customers} /></> : <><PendingRegistrations source={sources.registrations} /><UsersScreen source={sources.users} /></>}
+      {tab === 'customers' ? <><AdminCustomerRegistration source={sources.registrations} onCreated={() => setCustomersRevision(value => value + 1)} /><CustomersScreen key={customersRevision} source={sources.customers} /></> : <><EmailInvitations source={sources.emailInvitations} /><PendingRegistrations source={sources.registrations} /><UsersScreen source={sources.users} /></>}
       <Button title="Salir del panel" onPress={onExit} />
     </ScrollView>
     <View accessibilityRole="tablist" style={styles.nav}>
