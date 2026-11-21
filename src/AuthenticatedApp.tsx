@@ -11,6 +11,10 @@ import { createRegistrationsSource } from './preview/registrations';
 import { RegistrationScreen, PendingRegistrations } from './preview/RegistrationScreens';
 import { createApiCustomersSource, createApiUsersSource, getOperationalSession } from './preview/api-sources';
 import { CustomersScreen } from './preview/CustomersScreen';
+import { CouriersScreen } from './preview/CouriersScreen';
+import { ShipmentScreen } from './preview/ShipmentScreen';
+import { ShipmentList } from './preview/ShipmentList';
+import { shareReceipt } from './receipt-download';
 import { UsersScreen } from './preview/UsersScreen';
 import { Button } from './preview/Controls';
 import { palette, styles } from './preview/styles';
@@ -129,11 +133,7 @@ function SignIn({ config, onExit }: { config: Config; onExit: () => void }) {
     } catch { setError('No se pudo ingresar. Verificá tu acceso e intentá nuevamente.'); }
     finally { setBusy(false); }
   }
-  if (staffSession) return <SafeAreaView style={styles.safe}><View style={styles.content}>
-    <Text accessibilityRole="header" style={styles.heading}>Hola, {staffSession.name}</Text>
-    <Text style={styles.text}>Tu cuenta está habilitada. Las funciones operativas de tu rol todavía no están disponibles.</Text>
-    <Button title="Salir" onPress={() => void signOut()} />
-  </View></SafeAreaView>;
+  if (staffSession) return <StaffShipments config={config} session={staffSession} onExit={() => void signOut()} />;
   if (customerSession) return <SelfCustomerScreen api={config.api} session={customerSession} onExit={() => void signOut()} />;
   if (registrationSession) return <RegistrationContainer config={config} session={registrationSession} onExit={() => void signOut()} />;
   if (session) return <AdminDirectory config={config} session={session} onExit={() => void signOut()} />;
@@ -143,6 +143,8 @@ function SignIn({ config, onExit }: { config: Config; onExit: () => void }) {
     {error ? <Text accessibilityRole="alert" style={styles.error}>{error}</Text> : null}
     {!discovery && error ? <Button title="Reintentar conexión" onPress={() => setDiscoveryAttempt((value) => value + 1)} /> : null}
     <Button title={busy ? 'Ingresando…' : 'Iniciar sesión'} disabled={!request || !discovery?.tokenEndpoint || busy} onPress={() => void signIn()} />
+    <Text style={styles.muted}>Si olvidaste tu contraseña, ingresá tu correo en la pantalla de acceso y elegí la opción para recuperarla.</Text>
+    <Button title="Recuperar contraseña" disabled={!request || !discovery?.tokenEndpoint || busy} onPress={() => void signIn()} />
     <Button title="Registro o invitación" disabled={!request || !discovery?.tokenEndpoint || busy} onPress={() => void signIn(true)} />
     <Button title="Volver" disabled={busy} onPress={onExit} />
   </View></SafeAreaView>;
@@ -153,23 +155,29 @@ function RegistrationContainer({ config, session, onExit }: { config: Config; se
   return <SafeAreaView style={styles.safe}><ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled"><InvitationClaim source={source} /><RegistrationScreen source={source} onExit={onExit} /></ScrollView></SafeAreaView>;
 }
 
+function StaffShipments({ config, session, onExit }: { config: Config; session: StaffSession; onExit: () => void }) {
+  const request = useMemo(() => createAuthenticatedTransport(config.api, session), [config.api, session]);
+  return <SafeAreaView style={styles.safe}><ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled"><Text accessibilityRole="header" style={styles.heading}>Hola, {session.name}</Text><ShipmentList request={request} downloadReceipt={(id) => shareReceipt(config.api, session, id)} own={session.role === 'COURIER'} readOnly /><Button title="Salir" onPress={onExit} /></ScrollView></SafeAreaView>;
+}
+
 function AdminDirectory({ config, session, onExit }: { config: Config; session: AdminSession; onExit: () => void }) {
-  const [tab, setTab] = useState<'customers' | 'users'>('customers');
+  const [tab, setTab] = useState<'customers' | 'users' | 'couriers' | 'shipments'>('customers');
   const [customersRevision, setCustomersRevision] = useState(0);
+  const [shipmentsRevision, setShipmentsRevision] = useState(0);
   const sources = useMemo(() => {
     const request = createAuthenticatedTransport(config.api, session);
-    return { customers: createApiCustomersSource(request), users: createApiUsersSource(request), registrations: createRegistrationsSource(request), emailInvitations: createEmailInvitationsSource(request) };
+    return { customers: createApiCustomersSource(request), users: createApiUsersSource(request), registrations: createRegistrationsSource(request), emailInvitations: createEmailInvitationsSource(request), request };
   }, [config.api, session]);
   return <SafeAreaView style={styles.safe}>
     <ScrollView key={tab} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
       <View style={styles.header}><Text style={styles.heading}>Ohana</Text><Text style={styles.muted}>{session.name}</Text></View>
-      {tab === 'customers' ? <><AdminCustomerRegistration source={sources.registrations} onCreated={() => setCustomersRevision(value => value + 1)} /><CustomersScreen key={customersRevision} source={sources.customers} /></> : <><EmailInvitations source={sources.emailInvitations} /><PendingRegistrations source={sources.registrations} /><UsersScreen source={sources.users} /></>}
+      {tab === 'customers' ? <><AdminCustomerRegistration source={sources.registrations} onCreated={() => setCustomersRevision(value => value + 1)} /><CustomersScreen key={customersRevision} source={sources.customers} /></> : tab === 'couriers' ? <CouriersScreen request={sources.request} /> : tab === 'shipments' ? <><ShipmentList key={shipmentsRevision} request={sources.request} downloadReceipt={(id) => shareReceipt(config.api, session, id)} /><ShipmentScreen source={sources.customers} request={sources.request} registrations={sources.registrations} onCreated={() => setShipmentsRevision((v) => v + 1)} /></> : <><EmailInvitations source={sources.emailInvitations} /><PendingRegistrations source={sources.registrations} /><UsersScreen source={sources.users} /></>}
       <Button title="Salir del panel" onPress={onExit} />
     </ScrollView>
     <View accessibilityRole="tablist" style={styles.nav}>
-      {(['customers', 'users'] as const).map((item) => <Pressable key={item} accessibilityRole="tab" accessibilityState={{ selected: tab === item }}
+      {(['customers', 'shipments', 'couriers', 'users'] as const).map((item) => <Pressable key={item} accessibilityRole="tab" accessibilityState={{ selected: tab === item }}
         onPress={() => setTab(item)} style={[styles.navTab, tab === item && { backgroundColor: 'white' }]}>
-        <Text style={[styles.navText, tab === item && { color: palette.brand }]}>{item === 'customers' ? 'Clientes' : 'Usuarios'}</Text>
+        <Text style={[styles.navText, tab === item && { color: palette.brand }]}>{item === 'customers' ? 'Clientes' : item === 'shipments' ? 'Envíos' : item === 'couriers' ? 'Repartidores' : 'Usuarios'}</Text>
       </Pressable>)}
     </View>
   </SafeAreaView>;

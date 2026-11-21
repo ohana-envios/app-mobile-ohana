@@ -1,5 +1,5 @@
 type Session = { accessToken: string; expiresAt: number };
-type RequestOptions = { signal: AbortSignal; method?: string; headers?: Record<string, string>; body?: string };
+type RequestOptions = { signal: AbortSignal; method?: string; headers?: Record<string, string>; body?: string | FormData };
 
 export function createAuthenticatedTransport(baseUrl: string, session: Session) {
   return async function request<T>(path: string, init: RequestOptions): Promise<T> {

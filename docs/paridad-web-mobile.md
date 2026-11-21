@@ -129,3 +129,9 @@ Siguiente tramo: 27 pruebas por repositorio al agregar cambios de rol/acceso a u
 ## Invitaciones por correo
 
 Web y m?vil ofrecen el env?o desde Usuarios para administradores habilitados cuyo identificador tambi?n est? incluido en la lista autorizada del servicio. La API vuelve a comprobar ambas condiciones al enviar. La verificaci?n con ZITADEL real, la entrega de correo y la interacci?n en dispositivos siguen pendientes.
+# Revisión de pendientes del Sprint 3
+
+Web y móvil permiten revisar las fichas de repartidores con el mismo nombre antes de guardar. En ambas aplicaciones, el registro de envíos usa un identificador estable al reintentar después de un error de conexión; se muestra también el código para consultarlo si se abandona la pantalla. Las validaciones indican el dato o la dirección que se debe revisar.
+## Consulta de envíos por rol
+
+Web y móvil ofrecen consulta de todos los envíos para operadores, y de los envíos asignados a su ficha activa para repartidores. En ambas plataformas el administrador puede vincular o desvincular una cuenta de repartidor desde la ficha. La API aplica el filtro y la verificación de permisos; las pantallas de estos dos roles son de consulta. La verificación con cuentas reales y en dispositivos queda pendiente.
