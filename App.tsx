@@ -1,11 +1,20 @@
 import { useState } from 'react';
 import { Pressable, SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, View } from 'react-native';
-import { colors } from './src/theme';
+import { useFonts } from 'expo-font';
+import { PlusJakartaSans_400Regular } from '@expo-google-fonts/plus-jakarta-sans/400Regular';
+import { PlusJakartaSans_600SemiBold } from '@expo-google-fonts/plus-jakarta-sans/600SemiBold';
+import { PlusJakartaSans_700Bold } from '@expo-google-fonts/plus-jakarta-sans/700Bold';
+import { PlusJakartaSans_800ExtraBold } from '@expo-google-fonts/plus-jakarta-sans/800ExtraBold';
+import { colors, fonts } from './src/theme';
 import { AuthenticatedApp } from './src/AuthenticatedApp';
 
 export default function App() {
   const [preview, setPreview] = useState(false);
   const [administration, setAdministration] = useState(false);
+  const [loaded, fontError] = useFonts({
+    PlusJakartaSans_400Regular, PlusJakartaSans_600SemiBold, PlusJakartaSans_700Bold, PlusJakartaSans_800ExtraBold,
+  });
+  if (!loaded && !fontError) return <SafeAreaView style={styles.safe} />;
   if (administration) return <AuthenticatedApp onExit={() => setAdministration(false)} />;
   if (__DEV__ && preview) {
     // Metro removes this development-only branch and its fixtures in release builds.
@@ -14,7 +23,7 @@ export default function App() {
   }
 
   return <SafeAreaView style={styles.safe}>
-    <StatusBar barStyle="light-content" />
+    <StatusBar barStyle="dark-content" />
     <View style={styles.header}>
       <View style={styles.brandMark}><Text style={styles.brandLetter}>O</Text></View>
       <View><Text style={styles.brand}>Ohana</Text><Text style={styles.brandSub}>ENVÍOS</Text></View>
@@ -33,17 +42,17 @@ export default function App() {
 }
 
 const styles = StyleSheet.create({
-  previewButton: { minHeight: 52, padding: 16, backgroundColor: colors.surface, borderRadius: 12, marginBottom: 20 },
-  previewButtonText: { color: colors.blue, fontSize: 16, fontWeight: '700' },
+  previewButton: { minHeight: 52, padding: 16, backgroundColor: colors.surface, borderRadius: 16, marginBottom: 20 },
+  previewButtonText: { color: colors.brand, fontSize: 16, fontFamily: fonts.bold },
   safe: { flex: 1, backgroundColor: colors.background },
-  header: { backgroundColor: colors.blue, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 15 },
-  brandMark: { width: 36, height: 36, borderRadius: 10, backgroundColor: colors.orange, alignItems: 'center', justifyContent: 'center', marginRight: 10 },
-  brandLetter: { color: '#fff', fontSize: 23, fontWeight: '900' },
-  brand: { color: '#fff', fontSize: 18, fontWeight: '800', lineHeight: 20 },
-  brandSub: { color: '#b8d8eb', fontSize: 9, fontWeight: '700', letterSpacing: 2 },
+  header: { backgroundColor: colors.background, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 15 },
+  brandMark: { width: 36, height: 36, borderRadius: 10, backgroundColor: colors.brand, alignItems: 'center', justifyContent: 'center', marginRight: 10 },
+  brandLetter: { color: '#fff', fontSize: 23, fontFamily: fonts.heading },
+  brand: { color: colors.text, fontSize: 18, fontFamily: fonts.heading, lineHeight: 20 },
+  brandSub: { color: colors.muted, fontSize: 9, fontFamily: fonts.bold, letterSpacing: 2 },
   content: { padding: 24, gap: 12, width: '100%', maxWidth: 620, alignSelf: 'center' },
-  primaryButton: { minHeight: 52, padding: 16, backgroundColor: colors.orange, borderRadius: 12, justifyContent: 'center' },
-  primaryText: { color: '#222b34', fontSize: 16, fontWeight: '700' },
-  heading: { color: colors.text, fontSize: 28, fontWeight: '800', marginBottom: 8 },
-  intro: { color: colors.muted, fontSize: 15, marginBottom: 22 },
+  primaryButton: { minHeight: 52, padding: 16, backgroundColor: colors.brand, borderRadius: 16, justifyContent: 'center' },
+  primaryText: { color: colors.surface, fontSize: 16, fontFamily: fonts.bold },
+  heading: { color: colors.text, fontSize: 28, fontFamily: fonts.heading, marginBottom: 8 },
+  intro: { fontFamily: fonts.regular, color: colors.muted, fontSize: 15, marginBottom: 22 },
 });

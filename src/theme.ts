@@ -1,10 +1,18 @@
 export const colors = {
-  blue: '#004e89',
-  blueDark: '#003a66',
-  orange: '#ff6b35',
-  background: '#f6f8fb',
-  surface: '#ffffff',
-  text: '#243b4b',
-  muted: '#6d8392',
-  border: '#e4ebf0',
+  brand: '#0D7052',
+  brandDark: '#0A5B42',
+  soft: '#EAF1EC',
+  mint: '#E3F2EA',
+  background: '#F2F6F3',
+  surface: '#FFFFFF',
+  text: '#16221C',
+  muted: '#5A6B61',
+  border: '#E4EBE6',
+} as const;
+
+export const fonts = {
+  regular: 'PlusJakartaSans_400Regular',
+  semibold: 'PlusJakartaSans_600SemiBold',
+  bold: 'PlusJakartaSans_700Bold',
+  heading: 'PlusJakartaSans_800ExtraBold',
 } as const;

@@ -165,6 +165,13 @@ function StaffShipments({ config, session, onExit }: { config: Config; session: 
   return <SafeAreaView style={styles.safe}><ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled"><Text accessibilityRole="header" style={styles.heading}>Hola, {session.name}</Text><ShipmentList request={request} downloadReceipt={(id) => shareReceipt(config.api, session, id)} own={session.role === 'COURIER'} readOnly /><Button title="Salir" onPress={onExit} /></ScrollView></SafeAreaView>;
 }
 
+const adminTabs = [
+  { key: 'customers', label: 'Clientes', icon: '◉' },
+  { key: 'shipments', label: 'Envíos', icon: '▤' },
+  { key: 'couriers', label: 'Repartidores', icon: '◎' },
+  { key: 'users', label: 'Usuarios', icon: '☰' },
+] as const;
+
 function AdminDirectory({ config, session, onExit }: { config: Config; session: AdminSession; onExit: () => void }) {
   const [tab, setTab] = useState<'customers' | 'users' | 'couriers' | 'shipments'>('customers');
   const [accessView, setAccessView] = useState<'directory' | 'pending' | 'email'>('directory');
@@ -189,9 +196,9 @@ function AdminDirectory({ config, session, onExit }: { config: Config; session: 
       <Button title="Salir del panel" onPress={onExit} />
     </ScrollView>
     <View accessibilityRole="tablist" style={styles.nav}>
-      {(['customers', 'shipments', 'couriers', 'users'] as const).map((item) => <Pressable key={item} accessibilityRole="tab" accessibilityState={{ selected: tab === item }}
-        onPress={() => setTab(item)} style={[styles.navTab, tab === item && { backgroundColor: 'white' }]}>
-        <Text style={[styles.navText, tab === item && { color: palette.brand }]}>{item === 'customers' ? 'Clientes' : item === 'shipments' ? 'Envíos' : item === 'couriers' ? 'Repartidores' : 'Usuarios'}</Text>
+      {adminTabs.map(item => <Pressable key={item.key} accessibilityRole="tab" accessibilityLabel={item.label} accessibilityState={{ selected: tab === item.key }}
+        onPress={() => setTab(item.key)} style={[styles.navTab, tab === item.key && { flexGrow: 2, backgroundColor: palette.card }]}>
+        <Text style={[styles.navText, tab === item.key && { color: palette.brand }]}>{item.icon}{tab === item.key ? ' ' + item.label : ''}</Text>
       </Pressable>)}
     </View>
   </SafeAreaView>;
