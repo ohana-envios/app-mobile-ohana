@@ -1,12 +1,12 @@
 import { Pressable, Text, TextInput, View } from 'react-native';
 import { palette, styles as s } from './styles';
 
-export function Button({ title, onPress, disabled = false, selected = false }: {
-  title: string; onPress: () => void; disabled?: boolean; selected?: boolean;
+export function Button({ title, onPress, disabled = false, selected = false, primary = false }: {
+  title: string; onPress: () => void; disabled?: boolean; selected?: boolean; primary?: boolean;
 }) {
   return <Pressable accessibilityRole="button" accessibilityState={{ disabled, selected }} disabled={disabled}
-    onPress={onPress} style={[s.button, selected && s.selected, disabled && s.disabled]}>
-    <Text style={s.buttonText}>{title}</Text>
+    onPress={onPress} style={[s.button, primary && s.primaryButton, selected && s.selected, disabled && s.disabled]}>
+    <Text style={[s.buttonText, primary && s.primaryText]}>{title}</Text>
   </Pressable>;
 }
 

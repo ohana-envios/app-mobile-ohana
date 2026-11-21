@@ -35,7 +35,7 @@ export function UsersScreen({ source, preview = false }: { source: UsersSource; 
   return <>
     <Text accessibilityRole="header" style={s.title}>Usuarios</Text>
     <Text style={s.muted}>Consulta administrativa. El filtro de rol no cambia los permisos de nadie.</Text>
-    <InternalUserForm source={source} onCreated={() => setRetry(n => n + 1)} />
+    <InternalUserForm source={source} onCreated={email => setQuery(previous => ({ ...previous, search: email, role: 'all', status: 'all', page: 1 }))} />
     {change && <View style={s.card} accessibilityLiveRegion="polite">
       <Text style={s.heading}>Acceso actualizado{preview ? ' en la vista previa' : ''}: {change.user.displayName}</Text>
       {(change.audit || change.previewAudit) && <>

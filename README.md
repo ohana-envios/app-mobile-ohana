@@ -1,6 +1,6 @@
 # Ohana Envíos — app móvil
 
-Base Expo SDK 58 + React Native 0.88 + TypeScript para iOS y Android. Usa la paleta y la organización inicial del prototipo web de Ohana: resumen, envíos y perfil. No hay métricas simuladas ni inicio de sesión ficticio.
+Aplicación móvil de Ohana con Expo y React Native. La tipografía, las superficies y los controles de acceso siguen el [prototipo de Ohana Envíos](https://github.com/sanei1509/ohana-envios-prototipo).
 
 ## Iniciar
 

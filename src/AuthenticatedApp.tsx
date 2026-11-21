@@ -108,7 +108,7 @@ function SignIn({ config, onExit }: { config: Config; onExit: () => void }) {
         providerClosed = result.type === 'success';
       }
     } catch { /* Report an unconfirmed provider logout below. */ }
-    if (!revoked || !providerClosed) setError('La sesi?n local se cerr?, pero no pudimos confirmar el cierre completo en el proveedor de identidad.');
+    if (!revoked || !providerClosed) setError('La sesión local se cerró, pero no pudimos confirmar el cierre completo en el proveedor de identidad.');
     setBusy(false);
   }
   async function signIn(register = false) {
@@ -137,22 +137,27 @@ function SignIn({ config, onExit }: { config: Config; onExit: () => void }) {
   if (customerSession) return <SelfCustomerScreen api={config.api} session={customerSession} onExit={() => void signOut()} />;
   if (registrationSession) return <RegistrationContainer config={config} session={registrationSession} onExit={() => void signOut()} />;
   if (session) return <AdminDirectory config={config} session={session} onExit={() => void signOut()} />;
-  return <SafeAreaView style={styles.safe}><View style={styles.content}>
+  return <SafeAreaView style={styles.safe}><ScrollView contentContainerStyle={styles.content}>
     <Text style={styles.heading}>Ingresar a Ohana</Text>
-    <Text style={styles.text}>Consultá clientes y usuarios con tu cuenta habilitada.</Text>
+    <Text style={styles.text}>Si se te pide configurar el segundo factor, seguí los pasos de ZITADEL y confirmá el método antes de volver a Ohana.</Text>
     {error ? <Text accessibilityRole="alert" style={styles.error}>{error}</Text> : null}
     {!discovery && error ? <Button title="Reintentar conexión" onPress={() => setDiscoveryAttempt((value) => value + 1)} /> : null}
-    <Button title={busy ? 'Ingresando…' : 'Iniciar sesión'} disabled={!request || !discovery?.tokenEndpoint || busy} onPress={() => void signIn()} />
+    <Button primary title={busy ? 'Ingresando…' : 'Iniciar sesión'} disabled={!request || !discovery?.tokenEndpoint || busy} onPress={() => void signIn()} />
     <Text style={styles.muted}>Si olvidaste tu contraseña, ingresá tu correo en la pantalla de acceso y elegí la opción para recuperarla.</Text>
     <Button title="Recuperar contraseña" disabled={!request || !discovery?.tokenEndpoint || busy} onPress={() => void signIn()} />
     <Button title="Registro o invitación" disabled={!request || !discovery?.tokenEndpoint || busy} onPress={() => void signIn(true)} />
     <Button title="Volver" disabled={busy} onPress={onExit} />
-  </View></SafeAreaView>;
+  </ScrollView></SafeAreaView>;
 }
 
 function RegistrationContainer({ config, session, onExit }: { config: Config; session: { accessToken: string; expiresAt: number }; onExit: () => void }) {
+  const [hasInvite, setHasInvite] = useState(false);
   const source = useMemo(() => createRegistrationsSource(createAuthenticatedTransport(config.api, session)), [config.api, session]);
-  return <SafeAreaView style={styles.safe}><ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled"><InvitationClaim source={source} /><RegistrationScreen source={source} onExit={onExit} /></ScrollView></SafeAreaView>;
+  return <SafeAreaView style={styles.safe}><ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled"><View style={styles.row}>
+      <Button title="Solicitar alta" selected={!hasInvite} onPress={() => setHasInvite(false)} />
+      <Button title="Tengo una invitación" selected={hasInvite} onPress={() => setHasInvite(true)} />
+    </View>
+    {hasInvite ? <><InvitationClaim source={source} /><Button title="Salir" onPress={onExit} /></> : <RegistrationScreen source={source} onExit={onExit} />}</ScrollView></SafeAreaView>;
 }
 
 function StaffShipments({ config, session, onExit }: { config: Config; session: StaffSession; onExit: () => void }) {
@@ -160,8 +165,16 @@ function StaffShipments({ config, session, onExit }: { config: Config; session: 
   return <SafeAreaView style={styles.safe}><ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled"><Text accessibilityRole="header" style={styles.heading}>Hola, {session.name}</Text><ShipmentList request={request} downloadReceipt={(id) => shareReceipt(config.api, session, id)} own={session.role === 'COURIER'} readOnly /><Button title="Salir" onPress={onExit} /></ScrollView></SafeAreaView>;
 }
 
+const adminTabs = [
+  { key: 'customers', label: 'Clientes', icon: '◉' },
+  { key: 'shipments', label: 'Envíos', icon: '▤' },
+  { key: 'couriers', label: 'Repartidores', icon: '◎' },
+  { key: 'users', label: 'Usuarios', icon: '☰' },
+] as const;
+
 function AdminDirectory({ config, session, onExit }: { config: Config; session: AdminSession; onExit: () => void }) {
   const [tab, setTab] = useState<'customers' | 'users' | 'couriers' | 'shipments'>('customers');
+  const [accessView, setAccessView] = useState<'directory' | 'pending' | 'email'>('directory');
   const [customersRevision, setCustomersRevision] = useState(0);
   const [shipmentsRevision, setShipmentsRevision] = useState(0);
   const sources = useMemo(() => {
@@ -171,13 +184,21 @@ function AdminDirectory({ config, session, onExit }: { config: Config; session: 
   return <SafeAreaView style={styles.safe}>
     <ScrollView key={tab} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
       <View style={styles.header}><Text style={styles.heading}>Ohana</Text><Text style={styles.muted}>{session.name}</Text></View>
-      {tab === 'customers' ? <><AdminCustomerRegistration source={sources.registrations} onCreated={() => setCustomersRevision(value => value + 1)} /><CustomersScreen key={customersRevision} source={sources.customers} /></> : tab === 'couriers' ? <CouriersScreen request={sources.request} /> : tab === 'shipments' ? <><ShipmentList key={shipmentsRevision} request={sources.request} downloadReceipt={(id) => shareReceipt(config.api, session, id)} /><ShipmentScreen source={sources.customers} request={sources.request} registrations={sources.registrations} onCreated={() => setShipmentsRevision((v) => v + 1)} /></> : <><EmailInvitations source={sources.emailInvitations} /><PendingRegistrations source={sources.registrations} /><UsersScreen source={sources.users} /></>}
+      {tab === 'customers' ? <><Button title="Revisar solicitudes de clientes" onPress={() => { setAccessView('pending'); setTab('users'); }} /><AdminCustomerRegistration source={sources.registrations} onCreated={() => setCustomersRevision(value => value + 1)} /><CustomersScreen key={customersRevision} source={sources.customers} /></> : tab === 'couriers' ? <CouriersScreen request={sources.request} /> : tab === 'shipments' ? <><ShipmentList key={shipmentsRevision} request={sources.request} downloadReceipt={(id) => shareReceipt(config.api, session, id)} /><ShipmentScreen source={sources.customers} request={sources.request} registrations={sources.registrations} onCreated={() => setShipmentsRevision((v) => v + 1)} /></> : <>
+        <View style={styles.row}>
+          <Button title="Usuarios y roles" selected={accessView === 'directory'} onPress={() => setAccessView('directory')} />
+          <Button title="Clientes pendientes" selected={accessView === 'pending'} onPress={() => setAccessView('pending')} />
+          <Button title="Invitar por correo" selected={accessView === 'email'} onPress={() => setAccessView('email')} />
+        </View>
+        {accessView === 'pending' ? <PendingRegistrations source={sources.registrations} /> :
+          accessView === 'email' ? <EmailInvitations source={sources.emailInvitations} /> : <UsersScreen source={sources.users} />}
+      </>}
       <Button title="Salir del panel" onPress={onExit} />
     </ScrollView>
     <View accessibilityRole="tablist" style={styles.nav}>
-      {(['customers', 'shipments', 'couriers', 'users'] as const).map((item) => <Pressable key={item} accessibilityRole="tab" accessibilityState={{ selected: tab === item }}
-        onPress={() => setTab(item)} style={[styles.navTab, tab === item && { backgroundColor: 'white' }]}>
-        <Text style={[styles.navText, tab === item && { color: palette.brand }]}>{item === 'customers' ? 'Clientes' : item === 'shipments' ? 'Envíos' : item === 'couriers' ? 'Repartidores' : 'Usuarios'}</Text>
+      {adminTabs.map(item => <Pressable key={item.key} accessibilityRole="tab" accessibilityLabel={item.label} accessibilityState={{ selected: tab === item.key }}
+        onPress={() => setTab(item.key)} style={[styles.navTab, tab === item.key && { flexGrow: 2, backgroundColor: palette.card }]}>
+        <Text style={[styles.navText, tab === item.key && { color: palette.brand }]}>{item.icon}{tab === item.key ? ' ' + item.label : ''}</Text>
       </Pressable>)}
     </View>
   </SafeAreaView>;
