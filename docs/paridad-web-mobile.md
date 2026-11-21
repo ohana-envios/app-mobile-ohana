@@ -135,3 +135,16 @@ Web y móvil permiten revisar las fichas de repartidores con el mismo nombre ant
 ## Consulta de envíos por rol
 
 Web y móvil ofrecen consulta de todos los envíos para operadores, y de los envíos asignados a su ficha activa para repartidores. En ambas plataformas el administrador puede vincular o desvincular una cuenta de repartidor desde la ficha. La API aplica el filtro y la verificación de permisos; las pantallas de estos dos roles son de consulta. La verificación con cuentas reales y en dispositivos queda pendiente.
+# Estados operativos del Sprint 4
+
+Web y móvil ofrecen a administradores y repartidores asignados los mismos cambios a «En ruta» y «En depósito» después del retiro. La API valida permisos y estado anterior, y guarda el evento; cambiar el estado no registra una transferencia de custodia. El retiro y la entrega todavía requieren sus flujos específicos, por lo que el recorrido completo sigue pendiente de integración y pruebas reales.
+
+## Custodia y transferencias
+
+Web y móvil consultan la custodia y registran transferencias mediante la misma API. Administración puede transferir a un repartidor activo o ubicación; un repartidor puede hacerlo cuando mantiene físicamente la custodia. El cambio no modifica la asignación ni el estado y queda en el historial interno. La vista «Paquetes bajo mi custodia» incluye los paquetes que un repartidor aún conserva aunque el envío se haya reasignado. El retiro todavía debe implementar la primera transferencia desde el remitente; faltan las pruebas visuales y con identidad real.
+
+Ambas interfaces permiten agregar una observación y un archivo opcional a una transferencia, y consultar la evidencia del historial según los permisos de la API. Agregar archivos a eventos ya registrados y las evidencias de retiro, entrega e incidencia quedan pendientes.
+
+## Planificación y etiquetas
+
+Web y móvil permiten confirmar una página de asignaciones por fecha, consultar tareas propias por jornada, cancelar antes del retiro con motivo y filtrar el historial según el rol. La etiqueta usa los mismos datos y reglas: web descarga HTML imprimible y móvil lo comparte. Los envíos nuevos usan un código corto y se mantienen la consulta de códigos históricos y la recuperación de registros interrumpidos. La impresión y las pantallas requieren pruebas reales. Las asignaciones históricas sin fecha no aparecen en una jornada concreta, y la reprogramación de fecha continúa pendiente.

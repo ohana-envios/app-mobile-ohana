@@ -14,6 +14,9 @@ import { CustomersScreen } from './preview/CustomersScreen';
 import { CouriersScreen } from './preview/CouriersScreen';
 import { ShipmentScreen } from './preview/ShipmentScreen';
 import { ShipmentList } from './preview/ShipmentList';
+import { MyCustody } from './preview/MyCustody';
+import { MyTasks } from './preview/MyTasks';
+import { DayPlanning } from './preview/DayPlanning';
 import { shareReceipt } from './receipt-download';
 import { UsersScreen } from './preview/UsersScreen';
 import { Button } from './preview/Controls';
@@ -157,7 +160,8 @@ function RegistrationContainer({ config, session, onExit }: { config: Config; se
 
 function StaffShipments({ config, session, onExit }: { config: Config; session: StaffSession; onExit: () => void }) {
   const request = useMemo(() => createAuthenticatedTransport(config.api, session), [config.api, session]);
-  return <SafeAreaView style={styles.safe}><ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled"><Text accessibilityRole="header" style={styles.heading}>Hola, {session.name}</Text><ShipmentList request={request} downloadReceipt={(id) => shareReceipt(config.api, session, id)} own={session.role === 'COURIER'} readOnly /><Button title="Salir" onPress={onExit} /></ScrollView></SafeAreaView>;
+  const [custodyRevision, setCustodyRevision] = useState(0);
+  return <SafeAreaView style={styles.safe}><ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled"><Text accessibilityRole="header" style={styles.heading}>Hola, {session.name}</Text>{session.role === 'COURIER' && <><MyTasks request={request} /><MyCustody key={custodyRevision} request={request} /></>}<ShipmentList request={request} downloadReceipt={(id) => shareReceipt(config.api, session, id)} own={session.role === 'COURIER'} canChangeStatus={session.role === 'COURIER'} onCustodyUpdated={() => setCustodyRevision((v) => v + 1)} readOnly /><Button title="Salir" onPress={onExit} /></ScrollView></SafeAreaView>;
 }
 
 function AdminDirectory({ config, session, onExit }: { config: Config; session: AdminSession; onExit: () => void }) {
@@ -171,7 +175,7 @@ function AdminDirectory({ config, session, onExit }: { config: Config; session: 
   return <SafeAreaView style={styles.safe}>
     <ScrollView key={tab} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
       <View style={styles.header}><Text style={styles.heading}>Ohana</Text><Text style={styles.muted}>{session.name}</Text></View>
-      {tab === 'customers' ? <><AdminCustomerRegistration source={sources.registrations} onCreated={() => setCustomersRevision(value => value + 1)} /><CustomersScreen key={customersRevision} source={sources.customers} /></> : tab === 'couriers' ? <CouriersScreen request={sources.request} /> : tab === 'shipments' ? <><ShipmentList key={shipmentsRevision} request={sources.request} downloadReceipt={(id) => shareReceipt(config.api, session, id)} /><ShipmentScreen source={sources.customers} request={sources.request} registrations={sources.registrations} onCreated={() => setShipmentsRevision((v) => v + 1)} /></> : <><EmailInvitations source={sources.emailInvitations} /><PendingRegistrations source={sources.registrations} /><UsersScreen source={sources.users} /></>}
+      {tab === 'customers' ? <><AdminCustomerRegistration source={sources.registrations} onCreated={() => setCustomersRevision(value => value + 1)} /><CustomersScreen key={customersRevision} source={sources.customers} /></> : tab === 'couriers' ? <CouriersScreen request={sources.request} /> : tab === 'shipments' ? <><DayPlanning key={shipmentsRevision} request={sources.request} /><ShipmentList key={shipmentsRevision} request={sources.request} downloadReceipt={(id) => shareReceipt(config.api, session, id)} canChangeStatus /><ShipmentScreen source={sources.customers} request={sources.request} registrations={sources.registrations} onCreated={() => setShipmentsRevision((v) => v + 1)} /></> : <><EmailInvitations source={sources.emailInvitations} /><PendingRegistrations source={sources.registrations} /><UsersScreen source={sources.users} /></>}
       <Button title="Salir del panel" onPress={onExit} />
     </ScrollView>
     <View accessibilityRole="tablist" style={styles.nav}>
