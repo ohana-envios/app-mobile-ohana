@@ -1,3 +1,4 @@
+import { ShipmentLabel } from './ShipmentLabel';
 import { useEffect, useRef, useState } from 'react';
 import { Text, View } from 'react-native';
 import * as DocumentPicker from 'expo-document-picker';
@@ -23,7 +24,7 @@ export function ShipmentScreen({ source, request, own = false, onCreated, regist
   const [registerCustomer, setRegisterCustomer] = useState(false);
   const attempt = useRef<{ key: string; payload: string; receipt: DocumentPicker.DocumentPickerAsset | null } | null>(null);
   const [uncertain, setUncertain] = useState(false);
-  const [review, setReview] = useState(false); const [busy, setBusy] = useState(false); const [error, setError] = useState(''); const [code, setCode] = useState('');
+  const [review, setReview] = useState(false); const [busy, setBusy] = useState(false); const [error, setError] = useState(''); const [code, setCode] = useState(''); const [createdId, setCreatedId] = useState('');
   useEffect(() => {
     const controller = new AbortController();
     if (own) source.get('', controller.signal).then(setCustomer).catch(() => { if (!controller.signal.aborted) setError('No se pudo cargar tu ficha de cliente.'); });
@@ -57,14 +58,14 @@ export function ShipmentScreen({ source, request, own = false, onCreated, regist
       const multipart = new FormData();
       if (current.receipt) { multipart.append('payload', current.payload); multipart.append('receipt', { uri: current.receipt.uri, name: current.receipt.name, type: current.receipt.mimeType } as unknown as Blob); }
       const headers: Record<string, string> = { 'Idempotency-Key': current.key }; if (!current.receipt) headers['Content-Type'] = 'application/json';
-      const result = await request<{ code: string }>('/api/shipments', { signal: new AbortController().signal, method: 'POST', headers, body: current.receipt ? multipart : current.payload });
-      attempt.current = null; setUncertain(false); setCode(result.code); setReview(false); onCreated?.();
+      const result = await request<{ id: string; code: string }>('/api/shipments', { signal: new AbortController().signal, method: 'POST', headers, body: current.receipt ? multipart : current.payload });
+      attempt.current = null; setUncertain(false); setCode(result.code); setCreatedId(result.id); setReview(false); onCreated?.();
     } catch (reason) { const status = (reason as { status?: number })?.status; if (!uncertain && status && status >= 400 && status < 500 && status !== 408 && status !== 429) { attempt.current = null; setUncertain(false); setReview(false); setError('No se pudo registrar. Revisá los datos y volvé a intentarlo.'); } else { setUncertain(true); setError('No pudimos confirmar si se registró el envío. Reintentá para comprobarlo sin crear otro.'); } }
     finally { setBusy(false); }
   }
   const addressFields = (label: string, value: Address, update: (next: Address) => void) => <View><Text accessibilityRole="header" style={styles.text}>{label}</Text>{([['street', 'Calle', 160], ['number', 'Número', 30], ['locality', 'Localidad', 80], ['department', 'Departamento', 80], ['reference', 'Referencia', 240]] as const).map(([key, title, max]) => <Field key={key} label={title} maxLength={max} value={value[key]} onChange={(text) => update({ ...value, [key]: text })} />)}</View>;
   if (uncertain && attempt.current) return <View><Text accessibilityRole="header" style={styles.heading}>Registro sin confirmar</Text><Text accessibilityRole="alert" style={styles.error}>{error}</Text><Text style={styles.text}>Código de recuperación para consultar: OH-{attempt.current.key.toUpperCase()}. Anotalo antes de salir de esta pantalla.</Text><Button title={busy ? 'Comprobando…' : 'Reintentar y comprobar'} disabled={busy} onPress={() => void submit()} /></View>;
-  if (code) return <View><Text accessibilityRole="header" style={styles.heading}>Envío registrado</Text><Text style={styles.text}>Código: {code}</Text><Button title="Registrar otro envío" onPress={() => { setCode(''); setName(''); setPhone(''); setPackageDescription(''); setWhen(''); setDeliveryWhen(''); setReceipt(null); setNotes(''); setPickup(emptyAddress()); setDelivery(emptyAddress()); setPickupId('new'); setSaveAddress(false); }} /></View>;
+  if (code) return <View><Text accessibilityRole="header" style={styles.heading}>Envío registrado</Text><Text style={styles.text}>Código: {code}</Text>{createdId && <ShipmentLabel id={createdId} request={request} />}<Button title="Registrar otro envío" onPress={() => { setCode(''); setCreatedId(''); setName(''); setPhone(''); setPackageDescription(''); setWhen(''); setDeliveryWhen(''); setReceipt(null); setNotes(''); setPickup(emptyAddress()); setDelivery(emptyAddress()); setPickupId('new'); setSaveAddress(false); }} /></View>;
   return <View><Text accessibilityRole="header" style={styles.heading}>Nuevo envío</Text>{error ? <Text accessibilityRole="alert" style={styles.error}>{error}</Text> : null}
     {!own && <View><Field label="Buscar cliente" value={search} maxLength={120} onChange={(value) => { setPage(1); setSearch(value); }} />{customers.map((item) => <View key={item.id}><Text style={styles.text}>{item.displayName}</Text><Button title="Seleccionar cliente" onPress={() => void choose(item.id)} /></View>)}<Pagination page={page} pages={pages} onChange={setPage} />{registrations && <><Button title={registerCustomer ? 'Cerrar alta de cliente' : 'Registrar nuevo cliente'} onPress={() => setRegisterCustomer(!registerCustomer)} />{registerCustomer && <AdminCustomerRegistration source={registrations} onCreated={(id) => { setRegisterCustomer(false); setSearch(''); setPage(1); void choose(id, true); }} />}</>}</View>}
     {customer && <View><Text style={styles.text}>Cliente: {customer.displayName}</Text><Text style={styles.label}>Dirección de retiro</Text>

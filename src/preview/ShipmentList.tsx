@@ -6,11 +6,10 @@ import { styles } from './styles';
 import { ShipmentHistory } from './ShipmentHistory';
 import { ShipmentAssignment } from './ShipmentAssignment';
 import { ShipmentCustody } from './ShipmentCustody';
+import { ShipmentPickup } from './ShipmentPickup';
 import { directShipmentCode } from './shipments/code-search';
 import { shipmentStatuses as statuses } from './shipments/statuses';
-import { labelHtml, type LabelData } from './shipments/label';
-import * as FileSystem from 'expo-file-system/legacy';
-import * as Sharing from 'expo-sharing';
+import { ShipmentLabel } from './ShipmentLabel';
 
 type Summary = { id: string; code: string; recipientName: string; status: string; priority: string; createdAt: string; customer: { displayName: string } };
 type Detail = Summary & { senderName: string; recipientPhone: string | null; pickupStreet: string; pickupNumber: string; pickupLocality: string; pickupDepartment: string; deliveryStreet: string; deliveryNumber: string; deliveryLocality: string; deliveryDepartment: string; requestedPickupAt: string | null; requestedDeliveryAt: string | null; receipt: { id: string; version: number } | null; assignedCourier?: { id: string; displayName: string } | null; packages: { description: string | null }[]; notes?: string | null };
@@ -27,11 +26,6 @@ export function ShipmentList({ request, downloadReceipt, own = false, readOnly =
   const [statusObservation, setStatusObservation] = useState('');
   const [historyRevision, setHistoryRevision] = useState(0);
   const [directResult, setDirectResult] = useState(false);
-  async function shareLabel(id: string) {
-    let path = '';
-    try { if (!FileSystem.cacheDirectory || !await Sharing.isAvailableAsync()) throw new Error('Unavailable'); const data = await request<LabelData>(`/api/shipments/${encodeURIComponent(id)}/label`, { signal: new AbortController().signal }); path = `${FileSystem.cacheDirectory}etiqueta-ohana-${Date.now()}.html`; await FileSystem.writeAsStringAsync(path, labelHtml(data), { encoding: FileSystem.EncodingType.UTF8 }); await Sharing.shareAsync(path, { mimeType: 'text/html', dialogTitle: 'Etiqueta para imprimir' }); }
-    catch { setError('No se pudo abrir la etiqueta.'); } finally { if (path) await FileSystem.deleteAsync(path, { idempotent: true }); }
-  }
   async function attach(item: Detail) {
     try {
       const selected = await DocumentPicker.getDocumentAsync({ type: ['application/pdf', 'image/png', 'image/jpeg'], copyToCacheDirectory: true });
@@ -92,8 +86,9 @@ export function ShipmentList({ request, downloadReceipt, own = false, readOnly =
     <Text style={styles.text}>Estado: {statuses[detail.status] ?? detail.status} · Prioridad: {detail.priority === 'HIGH' ? 'Alta' : 'Normal'}</Text><Text style={styles.text}>Cliente: {detail.customer.displayName} · Remitente: {detail.senderName}</Text><Text style={styles.text}>Destinatario: {detail.recipientName} · {detail.recipientPhone || 'Sin teléfono'}</Text>
     {!own && !readOnly && ['PENDING', 'ASSIGNED'].includes(detail.status) && <View><Field label="Motivo de cancelación" maxLength={500} value={cancelReason} onChange={setCancelReason} /><Button title="Cancelar envío antes del retiro" disabled={changingStatus || !cancelReason.trim()} onPress={() => cancelShipment(detail)} /></View>}
     {canChangeStatus && ['PICKED_UP', 'IN_ROUTE', 'IN_DEPOT'].includes(detail.status) && <View><Text style={styles.text}>Cambiar estado operativo (no modifica la custodia).</Text><Field label="Observación opcional" maxLength={1000} value={statusObservation} onChange={setStatusObservation} />{detail.status !== 'IN_ROUTE' && <Button title="Marcar en ruta" disabled={changingStatus} onPress={() => changeStatus(detail, 'IN_ROUTE')} />}{detail.status !== 'IN_DEPOT' && <Button title="Marcar en depósito" disabled={changingStatus} onPress={() => changeStatus(detail, 'IN_DEPOT')} />}</View>}
-    {!readOnly && <Button title="Compartir etiqueta para imprimir" onPress={() => void shareLabel(detail.id)} />}
-    {canChangeStatus && <ShipmentCustody id={detail.id} request={request} onUpdated={() => { setHistoryRevision((v) => v + 1); onCustodyUpdated?.(); }} />}
+    {!readOnly && <ShipmentLabel key={detail.id} id={detail.id} request={request} />}
+    {own && canChangeStatus && detail.status === 'ASSIGNED' && <ShipmentPickup key={detail.id} id={detail.id} request={request} onComplete={() => { setDetail({ ...detail, status: 'PICKED_UP' }); setItems((items) => items.map((item) => item.id === detail.id ? { ...item, status: 'PICKED_UP' } : item)); setHistoryRevision((v) => v + 1); onCustodyUpdated?.(); }} />}
+    {canChangeStatus && <ShipmentCustody key={`${detail.id}-${historyRevision}`} id={detail.id} request={request} onUpdated={() => { setHistoryRevision((v) => v + 1); onCustodyUpdated?.(); }} />}
     <Text style={styles.text}>Retiro: {detail.pickupStreet} {detail.pickupNumber}, {detail.pickupLocality}, {detail.pickupDepartment}</Text><Text style={styles.text}>Entrega: {detail.deliveryStreet} {detail.deliveryNumber}, {detail.deliveryLocality}, {detail.deliveryDepartment}</Text><Text style={styles.text}>Paquete: {detail.packages.map((item) => item.description).filter(Boolean).join(', ') || 'Sin descripción'}</Text>
     <Text style={styles.text}>Registrado: {new Date(detail.createdAt).toLocaleString('es-UY')} · Retiro solicitado: {detail.requestedPickupAt ? new Date(detail.requestedPickupAt).toLocaleString('es-UY') : 'Sin indicar'} · Entrega solicitada: {detail.requestedDeliveryAt ? new Date(detail.requestedDeliveryAt).toLocaleString('es-UY') : 'Sin indicar'}</Text>{!own && detail.notes ? <Text style={styles.text}>Observaciones: {detail.notes}</Text> : null}{!readOnly && <>{detail.receipt && <Button title="Abrir comprobante" onPress={() => void downloadReceipt(detail.id).catch(() => setError('No se pudo abrir el comprobante.'))} />}<Text style={styles.text}>Adjuntar un comprobante no confirma el pago.</Text><Button title={uploading ? 'Adjuntando…' : detail.receipt ? 'Reemplazar comprobante' : 'Adjuntar comprobante'} disabled={uploading} onPress={() => void attach(detail)} />{!own && <ShipmentAssignment id={detail.id} current={detail.assignedCourier ?? null} request={request} onUpdated={() => { void open(detail.id); setHistoryRevision((v) => v + 1); }} />}<ShipmentHistory id={detail.id} request={request} revision={historyRevision} basic={own} /></>}{readOnly && !own && <ShipmentHistory id={detail.id} request={request} revision={historyRevision} />}{error ? <Text accessibilityRole="alert" style={styles.error}>{error}</Text> : null}</View>;
   return <View><Text accessibilityRole="header" style={styles.heading}>{own ? 'Mis envíos' : 'Consultar envíos'}</Text>
