@@ -1,16 +1,20 @@
 import { useState } from 'react';
 import { Pressable, SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, View } from 'react-native';
-import { EmptyState } from './src/components/EmptyState';
-import { colors } from './src/theme';
+import { useFonts } from 'expo-font';
+import { PlusJakartaSans_400Regular } from '@expo-google-fonts/plus-jakarta-sans/400Regular';
+import { PlusJakartaSans_600SemiBold } from '@expo-google-fonts/plus-jakarta-sans/600SemiBold';
+import { PlusJakartaSans_700Bold } from '@expo-google-fonts/plus-jakarta-sans/700Bold';
+import { PlusJakartaSans_800ExtraBold } from '@expo-google-fonts/plus-jakarta-sans/800ExtraBold';
+import { colors, fonts } from './src/theme';
 import { AuthenticatedApp } from './src/AuthenticatedApp';
 
-type Tab = 'Inicio' | 'Envíos' | 'Perfil';
-const tabs: Tab[] = ['Inicio', 'Envíos', 'Perfil'];
-
 export default function App() {
-  const [tab, setTab] = useState<Tab>('Inicio');
   const [preview, setPreview] = useState(false);
   const [administration, setAdministration] = useState(false);
+  const [loaded, fontError] = useFonts({
+    PlusJakartaSans_400Regular, PlusJakartaSans_600SemiBold, PlusJakartaSans_700Bold, PlusJakartaSans_800ExtraBold,
+  });
+  if (!loaded && !fontError) return <SafeAreaView style={styles.safe} />;
   if (administration) return <AuthenticatedApp onExit={() => setAdministration(false)} />;
   if (__DEV__ && preview) {
     // Metro removes this development-only branch and its fixtures in release builds.
@@ -19,79 +23,36 @@ export default function App() {
   }
 
   return <SafeAreaView style={styles.safe}>
-    <StatusBar barStyle="light-content" />
+    <StatusBar barStyle="dark-content" />
     <View style={styles.header}>
       <View style={styles.brandMark}><Text style={styles.brandLetter}>O</Text></View>
       <View><Text style={styles.brand}>Ohana</Text><Text style={styles.brandSub}>ENVÍOS</Text></View>
-      <View style={styles.headerSpacer} />
-      <Text style={styles.headerTag}>BASE MÓVIL</Text>
     </View>
     <ScrollView contentContainerStyle={styles.content}>
-      <Pressable accessibilityRole="button" onPress={() => setAdministration(true)} style={styles.previewButton}>
-        <Text style={styles.previewButtonText}>Ingresar al panel administrativo</Text>
+      <Text accessibilityRole="header" style={styles.heading}>Ingresá a Ohana</Text>
+      <Text style={styles.intro}>Accedé a tus envíos o solicitá el alta con tu cuenta.</Text>
+      <Pressable accessibilityRole="button" onPress={() => setAdministration(true)} style={styles.primaryButton}>
+        <Text style={styles.primaryText}>Continuar</Text>
       </Pressable>
       {__DEV__ && <Pressable accessibilityRole="button" onPress={() => setPreview(true)} style={styles.previewButton}>
         <Text style={styles.previewButtonText}>Probar Clientes y Usuarios · Datos ficticios</Text>
       </Pressable>}
-      {tab === 'Inicio' && <Home />}
-      {tab === 'Envíos' && <Section title="Mis envíos" description="Aquí aparecerán los envíos reales cuando la API incorpore el listado y seguimiento." />}
-      {tab === 'Perfil' && <Section title="Mi perfil" description="Este espacio recibirá los datos de la sesión cuando se integre Auth0 en la app móvil." />}
     </ScrollView>
-    <View style={styles.tabBar} accessibilityRole="tablist">
-      {tabs.map((item) => <Pressable key={item} accessibilityRole="tab" accessibilityState={{ selected: tab === item }} onPress={() => setTab(item)} style={[styles.tab, tab === item && styles.tabActive]}><Text style={[styles.tabText, tab === item && styles.tabTextActive]}>{item}</Text></Pressable>)}
-    </View>
   </SafeAreaView>;
 }
 
-function Home() {
-  return <>
-    <Text style={styles.eyebrow}>OPERACIÓN DIARIA</Text>
-    <Text style={styles.heading}>Bienvenido a Ohana</Text>
-    <Text style={styles.intro}>La gestión de tus envíos, desde cualquier lugar.</Text>
-    <View style={styles.hero}><Text style={styles.heroEyebrow}>SIEMPRE EN MOVIMIENTO</Text><Text style={styles.heroTitle}>Cada entrega cuenta.</Text><Text style={styles.heroText}>Esta base está lista para conectar los flujos de la app con la API de Ohana.</Text></View>
-    <Text style={styles.sectionTitle}>Resumen</Text>
-    <View style={styles.metrics}><Metric label="Envíos activos" /><Metric label="Entregas de hoy" /></View>
-    <View style={styles.card}><EmptyState title="Sin envíos para mostrar" description="Los datos aparecerán cuando estén disponibles los casos de uso de la API." /></View>
-  </>;
-}
-
-function Metric({ label }: { label: string }) {
-  return <View style={styles.metric}><Text style={styles.metricLabel}>{label}</Text><Text style={styles.metricValue}>—</Text><Text style={styles.metricNote}>Sin datos aún</Text></View>;
-}
-
-function Section({ title, description }: { title: string; description: string }) {
-  return <><Text style={styles.eyebrow}>OHANA ENVÍOS</Text><Text style={styles.heading}>{title}</Text><View style={styles.card}><EmptyState title="Próxima implementación" description={description} /></View></>;
-}
-
 const styles = StyleSheet.create({
-  previewButton: { minHeight: 52, padding: 16, backgroundColor: '#E3F2EA', borderRadius: 12, marginBottom: 20 },
-  previewButtonText: { color: '#0A5B42', fontSize: 16, fontWeight: '700' },
+  previewButton: { minHeight: 52, padding: 16, backgroundColor: colors.surface, borderRadius: 16, marginBottom: 20 },
+  previewButtonText: { color: colors.brand, fontSize: 16, fontFamily: fonts.bold },
   safe: { flex: 1, backgroundColor: colors.background },
-  header: { backgroundColor: colors.blue, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 15 },
-  brandMark: { width: 36, height: 36, borderRadius: 10, backgroundColor: colors.orange, alignItems: 'center', justifyContent: 'center', marginRight: 10 },
-  brandLetter: { color: '#fff', fontSize: 23, fontWeight: '900' },
-  brand: { color: '#fff', fontSize: 18, fontWeight: '800', lineHeight: 20 },
-  brandSub: { color: '#b8d8eb', fontSize: 9, fontWeight: '700', letterSpacing: 2 },
-  headerSpacer: { flex: 1 },
-  headerTag: { color: '#b8d8eb', fontSize: 9, fontWeight: '700', letterSpacing: 1.5 },
-  content: { padding: 22, paddingBottom: 36 },
-  eyebrow: { color: colors.blue, fontSize: 11, letterSpacing: 2, fontWeight: '800', marginBottom: 8 },
-  heading: { color: colors.text, fontSize: 28, fontWeight: '800', marginBottom: 8 },
-  intro: { color: colors.muted, fontSize: 15, marginBottom: 22 },
-  hero: { backgroundColor: colors.blue, borderRadius: 18, padding: 26, marginBottom: 28 },
-  heroEyebrow: { color: '#a8d4eb', fontSize: 10, fontWeight: '800', letterSpacing: 1.5 },
-  heroTitle: { color: '#fff', fontSize: 24, fontWeight: '800', marginTop: 9, marginBottom: 8 },
-  heroText: { color: '#d8ecf6', fontSize: 14, lineHeight: 21 },
-  sectionTitle: { color: colors.text, fontSize: 19, fontWeight: '800', marginBottom: 14 },
-  metrics: { flexDirection: 'row', gap: 12, marginBottom: 20 },
-  metric: { flex: 1, backgroundColor: colors.surface, borderColor: colors.border, borderWidth: 1, borderRadius: 14, padding: 16 },
-  metricLabel: { color: colors.muted, fontSize: 12 },
-  metricValue: { color: colors.blue, fontSize: 27, fontWeight: '800', marginVertical: 6 },
-  metricNote: { color: '#91a2ae', fontSize: 11 },
-  card: { backgroundColor: colors.surface, borderColor: colors.border, borderWidth: 1, borderRadius: 14, marginTop: 8 },
-  tabBar: { flexDirection: 'row', backgroundColor: colors.surface, borderTopColor: colors.border, borderTopWidth: 1, paddingHorizontal: 12, paddingBottom: 8 },
-  tab: { flex: 1, alignItems: 'center', paddingVertical: 13, borderRadius: 10 },
-  tabActive: { backgroundColor: '#eaf3f9' },
-  tabText: { color: colors.muted, fontSize: 13, fontWeight: '700' },
-  tabTextActive: { color: colors.blue },
+  header: { backgroundColor: colors.background, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 15 },
+  brandMark: { width: 36, height: 36, borderRadius: 10, backgroundColor: colors.brand, alignItems: 'center', justifyContent: 'center', marginRight: 10 },
+  brandLetter: { color: '#fff', fontSize: 23, fontFamily: fonts.heading },
+  brand: { color: colors.text, fontSize: 18, fontFamily: fonts.heading, lineHeight: 20 },
+  brandSub: { color: colors.muted, fontSize: 9, fontFamily: fonts.bold, letterSpacing: 2 },
+  content: { padding: 24, gap: 12, width: '100%', maxWidth: 620, alignSelf: 'center' },
+  primaryButton: { minHeight: 52, padding: 16, backgroundColor: colors.brand, borderRadius: 16, justifyContent: 'center' },
+  primaryText: { color: colors.surface, fontSize: 16, fontFamily: fonts.bold },
+  heading: { color: colors.text, fontSize: 28, fontFamily: fonts.heading, marginBottom: 8 },
+  intro: { fontFamily: fonts.regular, color: colors.muted, fontSize: 15, marginBottom: 22 },
 });

@@ -13,7 +13,7 @@ export function EmptyState({ title, description }: Props) {
 
 const styles = StyleSheet.create({
   container: { alignItems: 'center', paddingHorizontal: 24, paddingVertical: 60 },
-  symbol: { color: colors.orange, fontSize: 40, marginBottom: 12 },
+  symbol: { color: colors.brand, fontSize: 40, marginBottom: 12 },
   title: { color: colors.text, fontSize: 18, fontWeight: '700', textAlign: 'center', marginBottom: 8 },
   description: { color: colors.muted, fontSize: 14, lineHeight: 21, textAlign: 'center' },
 });
