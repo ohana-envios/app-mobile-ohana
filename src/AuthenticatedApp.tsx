@@ -1,4 +1,6 @@
-import { useEffect, useMemo, useState } from 'react';
+import { ProposalAlerts } from './preview/ProposalAlerts';
+import { PushSetup } from './preview/PushSetup';
+import { useEffect, useMemo, useRef, useState, type ComponentRef } from 'react';
 import { Pressable, SafeAreaView, ScrollView, Text, View } from 'react-native';
 import * as AuthSession from 'expo-auth-session';
 import * as WebBrowser from 'expo-web-browser';
@@ -180,15 +182,23 @@ function AdminDirectory({ config, session, onExit }: { config: Config; session: 
   const [tab, setTab] = useState<'customers' | 'users' | 'couriers' | 'shipments'>('customers');
   const [accessView, setAccessView] = useState<'directory' | 'pending' | 'email'>('directory');
   const [customersRevision, setCustomersRevision] = useState(0);
-  const [shipmentsRevision, setShipmentsRevision] = useState(0);
+  const [shipmentsRevision, setShipmentsRevision] = useState(0); const [selectedShipmentId, setSelectedShipmentId] = useState<string | undefined>();
   const sources = useMemo(() => {
     const request = createAuthenticatedTransport(config.api, session);
     return { customers: createApiCustomersSource(request), users: createApiUsersSource(request), registrations: createRegistrationsSource(request), emailInvitations: createEmailInvitationsSource(request), request };
   }, [config.api, session]);
+  const pushToken = useRef(''); const contentScroll = useRef<ComponentRef<typeof ScrollView>>(null);
+  async function leaveAdmin() {
+    if (pushToken.current) { try { await sources.request('/api/shipments/push-devices/deactivate', { signal: AbortSignal.timeout(3000), method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token: pushToken.current }) }); } catch { /* El dispositivo deja de recibir avisos al vencer la sesi?n. */ } }
+    onExit();
+  }
+  const openShipment = (id: string) => { setSelectedShipmentId(id); setShipmentsRevision((v) => v + 1); setTab('shipments'); contentScroll.current?.scrollTo({ y: 0, animated: true }); };
   return <SafeAreaView style={styles.safe}>
-    <ScrollView key={tab} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+    <PushSetup request={sources.request} expiresAt={session.expiresAt} onToken={(token) => { pushToken.current = token; }} onOpen={openShipment} />
+    <ScrollView ref={contentScroll} key={tab} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
       <View style={styles.header}><Text style={styles.heading}>Ohana</Text><Text style={styles.muted}>{session.name}</Text></View>
-      {tab === 'customers' ? <><Button title="Revisar solicitudes de clientes" onPress={() => { setAccessView('pending'); setTab('users'); }} /><AdminCustomerRegistration source={sources.registrations} onCreated={() => setCustomersRevision(value => value + 1)} /><CustomersScreen key={customersRevision} source={sources.customers} /></> : tab === 'couriers' ? <CouriersScreen request={sources.request} /> : tab === 'shipments' ? <><DayPlanning key={shipmentsRevision} request={sources.request} /><ShipmentList key={shipmentsRevision} request={sources.request} downloadReceipt={(id) => shareReceipt(config.api, session, id)} canChangeStatus /><ShipmentScreen source={sources.customers} request={sources.request} registrations={sources.registrations} onCreated={() => setShipmentsRevision((v) => v + 1)} /></> : <>
+      <ProposalAlerts request={sources.request} onOpen={openShipment} />
+      {tab === 'customers' ? <><Button title="Revisar solicitudes de clientes" onPress={() => { setAccessView('pending'); setTab('users'); }} /><AdminCustomerRegistration source={sources.registrations} onCreated={() => setCustomersRevision(value => value + 1)} /><CustomersScreen key={customersRevision} source={sources.customers} /></> : tab === 'couriers' ? <CouriersScreen request={sources.request} /> : tab === 'shipments' ? <><ShipmentList key={shipmentsRevision} request={sources.request} downloadReceipt={(id) => shareReceipt(config.api, session, id)} canChangeStatus initialShipmentId={selectedShipmentId} /><DayPlanning key={shipmentsRevision} request={sources.request} /><ShipmentScreen source={sources.customers} request={sources.request} registrations={sources.registrations} onCreated={() => setShipmentsRevision((v) => v + 1)} /></> : <>
         <View style={styles.row}>
           <Button title="Usuarios y roles" selected={accessView === 'directory'} onPress={() => setAccessView('directory')} />
           <Button title="Clientes pendientes" selected={accessView === 'pending'} onPress={() => setAccessView('pending')} />
@@ -197,7 +207,7 @@ function AdminDirectory({ config, session, onExit }: { config: Config; session: 
         {accessView === 'pending' ? <PendingRegistrations source={sources.registrations} /> :
           accessView === 'email' ? <EmailInvitations source={sources.emailInvitations} /> : <UsersScreen source={sources.users} />}
       </>}
-      <Button title="Salir del panel" onPress={onExit} />
+      <Button title="Salir del panel" onPress={() => void leaveAdmin()} />
     </ScrollView>
     <View accessibilityRole="tablist" style={styles.nav}>
       {adminTabs.map(item => <Pressable key={item.key} accessibilityRole="tab" accessibilityLabel={item.label} accessibilityState={{ selected: tab === item.key }}
