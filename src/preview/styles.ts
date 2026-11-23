@@ -1,0 +1,32 @@
+import { StyleSheet } from 'react-native';
+import { colors, fonts } from '../theme';
+export const palette = { bg: colors.background, card: '#FFFFFF', ink: colors.text, muted: colors.muted, brand: colors.brand, line: colors.border, soft: colors.mint, danger: '#94332D' };
+export const styles = StyleSheet.create({
+  safe: { flex: 1, backgroundColor: palette.bg },
+  content: { padding: 20, gap: 16, paddingBottom: 32, width: '100%', maxWidth: 900, alignSelf: 'center' },
+  header: { flexDirection: 'row', gap: 12, alignItems: 'center', flexWrap: 'wrap' },
+  logo: { backgroundColor: palette.brand, color: 'white', width: 44, height: 44, textAlign: 'center', textAlignVertical: 'center', borderRadius: 14, fontSize: 24, fontFamily: fonts.heading, paddingTop: 6 },
+  title: { color: palette.ink, fontSize: 27, fontFamily: fonts.heading },
+  subtitle: { color: palette.muted, fontSize: 13 },
+  heading: { color: palette.ink, fontSize: 21, fontFamily: fonts.bold },
+  text: { fontFamily: fonts.regular, color: palette.ink, fontSize: 16, lineHeight: 24 },
+  muted: { fontFamily: fonts.regular, color: palette.muted, fontSize: 14, lineHeight: 21 },
+  card: { backgroundColor: palette.card, borderColor: palette.line, borderWidth: 1, borderRadius: 22, padding: 20, gap: 12 },
+  hero: { backgroundColor: colors.brand, borderRadius: 22, padding: 22, gap: 16 },
+  heroHeading: { fontFamily: fonts.heading, fontSize: 21, color: colors.surface },
+  banner: { backgroundColor: '#FDF2E2', borderRadius: 16, padding: 16, gap: 6 },
+  row: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 8 },
+  button: { minHeight: 52, paddingHorizontal: 16, paddingVertical: 12, borderRadius: 16, borderColor: palette.brand, borderWidth: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: palette.card },
+  primaryButton: { backgroundColor: colors.brand, borderColor: colors.brand },
+  primaryText: { color: colors.surface },
+  buttonText: { color: palette.brand, fontSize: 16, fontFamily: fonts.semibold },
+  selected: { backgroundColor: palette.soft },
+  disabled: { opacity: 0.45 },
+  field: { gap: 6 },
+  label: { color: palette.ink, fontSize: 14, fontFamily: fonts.semibold },
+  input: { fontFamily: fonts.regular, minHeight: 52, padding: 12, backgroundColor: colors.soft, borderColor: colors.border, borderWidth: 1, borderRadius: 16, color: palette.ink, fontSize: 16 },
+  error: { color: palette.danger, fontSize: 14, lineHeight: 21 },
+  nav: { flexDirection: 'row', gap: 8, padding: 10, marginHorizontal: 16, marginBottom: 12, borderRadius: 32, backgroundColor: colors.text },
+  navTab: { flex: 1, minHeight: 52, padding: 8, borderRadius: 26, alignItems: 'center', justifyContent: 'center' },
+  navText: { color: colors.mint, fontSize: 14, fontFamily: fonts.bold, textAlign: 'center' },
+});
